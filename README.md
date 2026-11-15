@@ -155,8 +155,5 @@ actually follows from its planted data.
 
 ## Roadmap
 
-- [ ] Policy wording and claims handling guide documents (RAG source)
-- [ ] pgvector extension and embeddings for the documents
-- [ ] Agent tools: `get_policy`, `get_coverage`, `get_claims_history`, document search
-- [ ] Claims agent
-- [ ] Evaluation runner against `evals/golden_set.jsonl`
+Progress and next steps (RAG, MCP server, LangGraph agent with human approval, evaluation)
+are tracked in [`TODO.md`](TODO.md).
