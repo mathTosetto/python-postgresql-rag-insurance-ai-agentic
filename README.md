@@ -71,7 +71,9 @@ All tables live in the `insurance` schema (`insurance.policies`, ...).
 | `coverages` | `(policy_id, peril)` | One row per covered peril with its limit and deductible. |
 | `claims_history` | `claim_id` | Past claims: loss date, peril, loss amount, amount paid, outcome (`paid` / `denied` / `partial`). |
 
-Column-level descriptions are in [`db/init/01_schema.sql`](db/init/01_schema.sql).
+Column-level descriptions are in [`db/init/01_schema.sql`](db/init/01_schema.sql). The schema
+also enforces valid statuses and outcomes, `end_date > start_date`, `amount_paid <= loss_amount`,
+and that every past claim is for a peril its policy covers.
 
 ## Getting started
 

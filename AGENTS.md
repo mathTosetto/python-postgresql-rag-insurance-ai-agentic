@@ -53,6 +53,11 @@ docker compose down -v && docker compose up -d        # recreate the DB so db/in
 - `amount_paid = max(min(loss_amount, limit_amount) - deductible, 0)`. A `denied` claim pays 0.
   `partial` means the loss exceeded the limit.
 - `sum_insured` equals the product's fire limit.
+- The database enforces part of this in `db/init/01_schema.sql`: `valid_status`, `valid_outcome`,
+  `valid_end_date` (`end_date > start_date`), `valid_amount_paid` (`amount_paid <= loss_amount`)
+  and `fk_policy_id_peril` (a claim's peril must be in its policy's `coverages`). The claim
+  columns these compare are `NOT NULL`, because a `CHECK` or composite FK lets NULLs through.
+  The other rules are only checked by pytest, so the generator must keep them.
 
 ### Schema and CSV must stay in sync
 A column change touches **four places**:

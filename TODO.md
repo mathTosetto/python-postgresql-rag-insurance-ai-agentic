@@ -44,9 +44,9 @@ Legend: `[x]` done · `[ ]` to do · *(decision)* = choice still open
   - [x] `db/init/03_users-setup.sql`, tables moved to the `insurance` schema
   - [x] `tests/test_db_permissions.py`: agent can read, cannot write or create tables
 - [x] Move credentials to `.env` (+ `.env.example`), and add `.env` to `.gitignore`
-- [ ] Make the Compose variables required, so a missing `.env` fails early
-- [ ] Optional: `CHECK` constraints (`status`, `outcome`, `end_date > start_date`, `amount_paid <= loss_amount`)
-- [ ] Optional: composite FK `claims_history (policy_id, peril) → coverages`
+- [x] Make the Compose variables required, so a missing `.env` fails early (`env_file` with `required: true`)
+- [x] `CHECK` constraints (`status`, `outcome`, `end_date > start_date`, `amount_paid <= loss_amount`), plus `NOT NULL` on the claim columns they compare
+- [x] Composite FK `claims_history (policy_id, peril) → coverages` (replaces the single `policy_id` FK)
 
 ## 2. RAG source documents
 Without these, scenarios SCN-02, SCN-03, SCN-09 and SCN-10 can't be decided correctly.
