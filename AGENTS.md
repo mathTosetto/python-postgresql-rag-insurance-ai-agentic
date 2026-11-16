@@ -6,8 +6,9 @@ overview and the insurance domain.
 ## Commands
 
 ```bash
+cp .env.example .env                                  # once: local credentials read by docker compose and the tests
 uv sync                                               # install deps (test group included)
-uv run pytest                                         # run the test suite
+uv run pytest                                         # run the test suite (DB tests skip if the DB is down)
 uv run python -m synthetic_data.generate_mocked_data  # regenerate db/data/*.csv and evals/golden_set.jsonl
 docker compose down -v && docker compose up -d        # recreate the DB so db/init/ runs again
 ```
@@ -23,12 +24,14 @@ docker compose down -v && docker compose up -d        # recreate the DB so db/in
 |---|---|
 | `synthetic_data/generate_mocked_data.py` | Random data. `generate_dataset()` builds everything in memory; `main()` writes the files. |
 | `synthetic_data/scenarios.py` | Deterministic evaluation scenarios plus the golden set. |
-| `db/init/01_schema.sql` | Table definitions with column comments. |
+| `db/init/01_schema.sql` | Creates the `insurance` schema and its tables, with column comments. |
 | `db/init/02_load.sql` | `COPY` statements, run in FK order. |
+| `db/init/03_users-setup.sql` | Creates the read-only agent role from `POSTGRES_AGENT_*` (read with psql `\getenv`). |
+| `.env.example` | Template for `.env`, which holds the DB credentials and is git-ignored. |
 | `db/data/` | Generated CSVs. Never edit by hand; regenerate. |
 | `evals/golden_set.jsonl` | Generated. Holds the expected agent decisions. |
 | `notebooks/` | Exploration only. The script is the source of truth. |
-| `tests/` | pytest. `conftest.py` provides session-scoped `dataset`, `tables` and `scenarios` fixtures. |
+| `tests/` | pytest. `conftest.py` provides session-scoped `dataset`, `tables` and `scenarios` fixtures. Tests marked `db` (`test_db_permissions.py`) connect to the running database and skip when it is unreachable. |
 
 ## Invariants: do not break these
 
@@ -62,6 +65,16 @@ A column change touches **four places**:
 mismatch loads data into the wrong columns silently.
 `test_planted_rows_have_the_same_columns_as_random_rows` checks items 1 and 2 only.
 
+All tables live in the `insurance` schema, not `public`. Always schema-qualify table names in
+SQL (`insurance.policies`): `COPY` and other statements don't search `insurance` by default.
+
+### Database access
+- The agent connects as the `POSTGRES_AGENT_USER` role, which has `USAGE` on the `insurance`
+  schema and `SELECT` on its tables only. Never grant it write privileges.
+- A new table is **not** readable by the agent until you add it to the `GRANT SELECT` in
+  `db/init/03_users-setup.sql`. Add it to `TABLES` in `tests/test_db_permissions.py` too.
+- Anything that writes (data loading, RAG ingestion, a checkpointer) uses a different role.
+
 ### Evaluation integrity
 - The incoming claims and the expected decisions go to `evals/golden_set.jsonl` **only**.
   Never load them into the database or expose them to the agent's tools.
@@ -83,7 +96,8 @@ mismatch loads data into the wrong columns silently.
 
 ## Before finishing a change
 
-1. Run `uv run pytest`. All tests must pass.
+1. Run `uv run pytest`. All tests must pass. If the `db` tests were skipped, say so, and run
+   them with the database up when the change touches `db/init/`.
 2. If generated data changed, run the generator and mention it in your summary.
 3. If the schema changed, remind the user to run `docker compose down -v` (it deletes the
    database volume).
@@ -91,5 +105,7 @@ mismatch loads data into the wrong columns silently.
 
 ## Local credentials
 
-`admin` / `admin` in `docker-compose.yaml` are throwaway development credentials. Never reuse
-them anywhere else, and never add real secrets to the repository.
+Credentials live in `.env` (git-ignored), and `docker-compose.yaml` reads them with `${VAR}`.
+The values in `.env.example` (`admin` / `admin`, `rag_agent` / `rag_agent`) are throwaway
+development credentials. Never reuse them anywhere else, and never commit `.env` or real secrets.
+When you add a variable to `.env`, add it to `.env.example` too.

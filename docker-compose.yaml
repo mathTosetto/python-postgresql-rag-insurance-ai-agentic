@@ -1,19 +1,21 @@
 services:
 
   db:
-    image: postgres:18
+    image: pgvector/pgvector:pg18
     restart: always
     shm_size: 128mb
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: insurance
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_AGENT_USER: ${POSTGRES_AGENT_USER}
+      POSTGRES_AGENT_PASSWORD: ${POSTGRES_AGENT_PASSWORD}
     ports:
       - 5432:5432
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d:ro
       - ./db/data:/data:ro
-      - pgdata:/var/lib/postgresql  # 18+ layout: data lives in a versioned subdirectory
+      - pgdata:/var/lib/postgresql
 
   adminer:
     image: adminer

@@ -42,11 +42,13 @@ amount_paid = max(min(loss_amount, limit_amount) - deductible, 0)
 
 ```
 .
-├── docker-compose.yaml          # PostgreSQL + Adminer
+├── docker-compose.yaml          # PostgreSQL (pgvector) + Adminer
+├── .env.example                 # credentials template; copy to .env
 ├── db/
 │   ├── init/
-│   │   ├── 01_schema.sql        # tables (run on first DB start)
-│   │   └── 02_load.sql          # COPY from the CSVs
+│   │   ├── 01_schema.sql        # insurance schema + tables (run on first DB start)
+│   │   ├── 02_load.sql          # COPY from the CSVs
+│   │   └── 03_users-setup.sql   # read-only role for the agent
 │   └── data/                    # generated CSVs (mounted at /data)
 ├── evals/
 │   └── golden_set.jsonl         # planted incoming claims + expected decisions
@@ -59,6 +61,8 @@ amount_paid = max(min(loss_amount, limit_amount) - deductible, 0)
 ```
 
 ## Database schema
+
+All tables live in the `insurance` schema (`insurance.policies`, ...).
 
 | Table | Key | Description |
 |---|---|---|
@@ -74,25 +78,32 @@ Column-level descriptions are in [`db/init/01_schema.sql`](db/init/01_schema.sql
 Requirements: [uv](https://docs.astral.sh/uv/), Python 3.14, and Docker (Docker Desktop or Colima).
 
 ```bash
-# 1. Install dependencies (includes the test group)
+# 1. Create your local credentials file (git-ignored)
+cp .env.example .env
+
+# 2. Install dependencies (includes the test group)
 uv sync
 
-# 2. Generate the CSVs and the golden set
+# 3. Generate the CSVs and the golden set
 uv run python -m synthetic_data.generate_mocked_data
 
-# 3. Start PostgreSQL and Adminer; schema and data load on first start
+# 4. Start PostgreSQL and Adminer; schema, data and roles load on first start
 docker compose up -d
 docker compose logs db | grep -iE "COPY|error"
 ```
 
 | Service | Address | Credentials |
 |---|---|---|
-| PostgreSQL | `localhost:5432` | user `admin`, password `admin`, database `insurance` |
+| PostgreSQL (admin) | `localhost:5432` | `POSTGRES_USER` / `POSTGRES_PASSWORD` from `.env`, database `insurance` |
+| PostgreSQL (agent, read-only) | `localhost:5432` | `POSTGRES_AGENT_USER` / `POSTGRES_AGENT_PASSWORD` from `.env` |
 | Adminer (web UI) | http://localhost:8080 | System **PostgreSQL**, server `db` |
 
 ```bash
 psql -h localhost -U admin -d insurance
 ```
+
+The agent role can only `SELECT` from the `insurance` tables. It cannot insert, update,
+delete or create tables, so the agent can never change the data.
 
 ### Reloading the data
 
@@ -152,6 +163,10 @@ uv run pytest
 The tests check date and status consistency, the payout rules, primary and foreign key
 integrity, reproducibility, CSV/JSONL export, and that each scenario's expected decision
 actually follows from its planted data.
+
+`tests/test_db_permissions.py` connects to the running database as the agent role and checks
+that it can read every table but cannot write or create anything. These tests are skipped
+when the database is not running.
 
 ## Roadmap
 

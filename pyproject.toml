@@ -11,7 +11,9 @@ dependencies = [
 
 [dependency-groups]
 test = [
+    "psycopg[binary]>=3.3.9",
     "pytest>=9.2.0",
+    "python-dotenv>=1.2.4",
 ]
 
 [tool.uv]
@@ -20,3 +22,6 @@ default-groups = ["test"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "db: needs the running database from docker compose (skipped when unreachable)",
+]

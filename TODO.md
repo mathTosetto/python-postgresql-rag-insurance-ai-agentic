@@ -39,9 +39,12 @@ Legend: `[x]` done · `[ ]` to do · *(decision)* = choice still open
 ---
 
 ## 1. Database hardening
-- [ ] Switch the image to `pgvector/pgvector:pg18` (needed for RAG in step 3)
-- [ ] Read-only role for the agent (`GRANT SELECT` only); the agent must never write to the DB
-- [ ] Move credentials to `.env` (+ `.env.example`), and add `.env` to `.gitignore`
+- [x] Switch the image to `pgvector/pgvector:pg18` (needed for RAG in step 3)
+- [x] Read-only role for the agent (`GRANT SELECT` only); the agent must never write to the DB
+  - [x] `db/init/03_users-setup.sql`, tables moved to the `insurance` schema
+  - [x] `tests/test_db_permissions.py`: agent can read, cannot write or create tables
+- [x] Move credentials to `.env` (+ `.env.example`), and add `.env` to `.gitignore`
+- [ ] Make the Compose variables required, so a missing `.env` fails early
 - [ ] Optional: `CHECK` constraints (`status`, `outcome`, `end_date > start_date`, `amount_paid <= loss_amount`)
 - [ ] Optional: composite FK `claims_history (policy_id, peril) → coverages`
 
@@ -61,6 +64,7 @@ Without these, scenarios SCN-02, SCN-03, SCN-09 and SCN-10 can't be decided corr
 - [ ] *(decision)* Embedding model and chunk size
 - [ ] Ingestion script: load docs → chunk by section → embed → store
 - [ ] `document_chunks` table in pgvector with metadata (`doc_type`, `product_code`, `section`)
+  - [ ] Grant the agent role `SELECT` on it (and add it to `TABLES` in `test_db_permissions.py`)
 - [ ] Retriever with a metadata filter by product, so HOME-BASIC wording never answers a HOME-PLUS claim
 - [ ] Retrieval eval: for each scenario, check that its `required_docs` show up in the top-k
 
