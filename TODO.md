@@ -17,7 +17,7 @@ Legend: `[x]` done · `[ ]` to do · *(decision)* = choice still open
 - [x] Docker Compose with PostgreSQL 18 (pinned) and Adminer
 - [x] Volume mount fixed for the Postgres 18+ layout (`/var/lib/postgresql`)
 - [x] `db/init/01_schema.sql`: `customers`, `policies`, `coverages`, `claims_history`, with column comments
-- [x] `db/init/02_load.sql`: `COPY` from CSVs in FK order (loads 1,011 / 1,011 / 4,071 / 65 rows)
+- [x] `db/init/02_load.sql`: `COPY` from CSVs in FK order (loads 1,011 / 1,011 / 4,071 / 67 rows)
 
 ### Synthetic data
 - [x] Reproducible generator (`SEED`, fixed `TODAY`) in `synthetic_data/generate_mocked_data.py`
@@ -26,6 +26,7 @@ Legend: `[x]` done · `[ ]` to do · *(decision)* = choice still open
 - [x] Premium = sum insured × product rate
 - [x] Claims with per-peril frequency and skewed severity (loss ratio ≈ 0.6–0.8)
 - [x] Payout rule `max(min(loss, limit) − deductible, 0)` and `paid` / `partial` / `denied` outcomes
+- [x] Claim loss dates follow the in-force rule `start_date <= loss_date < min(end_date, cancelled_at)`, the same rule as the claims guide
 
 ### Evaluation data
 - [x] 12 planted scenarios in `synthetic_data/scenarios.py`, covering all 5 decisions
@@ -50,15 +51,15 @@ Legend: `[x]` done · `[ ]` to do · *(decision)* = choice still open
 
 ## 2. RAG source documents
 Without these, scenarios SCN-02, SCN-03, SCN-09 and SCN-10 can't be decided correctly.
-- [ ] Policy wording for each product (`docs/policy_wording/HOME-*.md`): what's covered, limits, deductibles, conditions
-- [ ] Exclusions section, including **gradual damage / slow leaks** (SCN-03) and a contrasting **sudden escape of water** cover (SCN-02)
-- [ ] Claims handling guide (`docs/claims_guide.md`):
-  - [ ] Decision taxonomy: `approve`, `partial`, `deny`, `escalate`, `request_info`
-  - [ ] Payout rule (limit and deductible)
-  - [ ] Fraud indicators with **the same thresholds as `scenarios.py`**: claim within 30 days of inception, 3+ claims in 12 months
-  - [ ] When to request information (missing loss date or amount, unknown policy)
-- [ ] Test that the guide's thresholds match `EARLY_CLAIM_DAYS`, `FREQUENT_CLAIMS_COUNT` and `FREQUENT_CLAIMS_MONTHS`
-- [ ] Keep the document values in sync with `PRODUCTS` (add a test or generate the tables from code)
+- [x] Policy wording for each product (`docs/policy_wording/HOME-*.md`): what's covered, limits, deductibles, conditions
+- [x] Exclusions section, including **gradual damage / slow leaks** (SCN-03) and a contrasting **sudden escape of water** cover (SCN-02)
+- [x] Claims handling guide (`docs/claims_guide.md`):
+  - [x] Decision taxonomy: `approve`, `partial`, `deny`, `escalate`, `request_info`
+  - [x] Payout rule (limit and deductible)
+  - [x] Fraud indicators with **the same thresholds as `scenarios.py`**: claim within 30 days of inception, 3+ claims in 12 months
+  - [x] When to request information (missing loss date or amount, unknown policy)
+- [x] Test that the guide's thresholds match `EARLY_CLAIM_DAYS`, `FREQUENT_CLAIMS_COUNT` and `FREQUENT_CLAIMS_MONTHS`
+- [x] Keep the document values in sync with `PRODUCTS` (`tests/test_docs.py`)
 
 ## 3. RAG pipeline
 - [ ] *(decision)* Embedding model and chunk size
