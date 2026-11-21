@@ -20,7 +20,9 @@ from synthetic_data.generate_mocked_data import (
 
 
 def _window_end(policy: dict) -> date:
-    return min(d for d in (policy["end_date"], policy["cancelled_at"], TODAY) if d)
+    """Last day a loss can happen: cover ends the day before end_date or cancelled_at."""
+    cover_ends = min(d for d in (policy["end_date"], policy["cancelled_at"]) if d)
+    return min(cover_ends - timedelta(days=1), TODAY)
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +169,20 @@ def test_no_claims_after_cancellation():
     claims = build_claims(policy, coverages)
 
     assert claims, "expected at least one claim with this many draws"
-    assert all(c["loss_date"] <= policy["cancelled_at"] for c in claims)
+    assert all(c["loss_date"] < policy["cancelled_at"] for c in claims)
+
+
+def test_no_claims_when_cancelled_on_start_date():
+    random.seed(1)
+    start = TODAY - timedelta(days=200)
+    policy = {
+        "policy_id": "POL-2026-00001",
+        "product_code": "HOME-PLUS",
+        "start_date": start,
+        "end_date": start + timedelta(days=365),
+        "cancelled_at": start,
+    }
+    assert build_claims(policy, build_coverages(policy) * 200) == []
 
 
 def test_loss_ratio_is_plausible(tables):

@@ -150,7 +150,11 @@ def build_coverages(policy: dict) -> list[dict]:
 
 def build_claims(policy: dict, coverages: list[dict]) -> list[dict]:
     claims = []
-    window_end = min(d for d in (policy["end_date"], policy["cancelled_at"], TODAY) if d)
+    # Cover runs from start_date up to, but not including, end_date or cancelled_at
+    cover_ends = min(d for d in (policy["end_date"], policy["cancelled_at"]) if d)
+    window_end = min(cover_ends - timedelta(days=1), TODAY)
+    if window_end < policy["start_date"]:  # cancelled on its start date: never in force
+        return claims
 
     for coverage in coverages:
         freq, lo, hi = CLAIM_PROFILE[coverage["peril"]]

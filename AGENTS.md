@@ -48,8 +48,12 @@ docker compose down -v && docker compose up -d        # recreate the DB so db/in
 - `customer_since <= start_date <= TODAY` and `end_date = start_date + 365 days`.
 - `active`: in force at `TODAY`. `lapsed`: `end_date < TODAY`. `cancelled`: has `cancelled_at`
   within the policy term. All other statuses have `cancelled_at = None`.
-- Claims only use perils the policy covers, and `loss_date` falls within
-  `[start_date, min(end_date, cancelled_at, TODAY)]`.
+- A policy is **in force** on a date `d` when `start_date <= d < min(end_date, cancelled_at)`:
+  cover ends the day *before* the end or cancellation date. The claims handling guide
+  (`docs/claims_guide.md`) and `_in_force` in `tests/test_scenarios.py` use the same rule.
+- Claims only use perils the policy covers, and `loss_date` is a day the policy was in force,
+  up to `TODAY`: `start_date <= loss_date < min(end_date, cancelled_at)` and `loss_date <= TODAY`.
+  A policy cancelled on its start date has no claims.
 - `amount_paid = max(min(loss_amount, limit_amount) - deductible, 0)`. A `denied` claim pays 0.
   `partial` means the loss exceeded the limit.
 - `sum_insured` equals the product's fire limit.
