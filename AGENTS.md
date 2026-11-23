@@ -7,7 +7,7 @@ overview and the insurance domain.
 
 ```bash
 cp .env.example .env                                  # once: local credentials read by docker compose and the tests
-uv sync                                               # install deps (test group included)
+uv sync                                               # install deps (test and notebook groups included)
 uv run pytest                                         # run the test suite (DB tests skip if the DB is down)
 uv run python -m synthetic_data.generate_mocked_data  # regenerate db/data/*.csv and evals/golden_set.jsonl
 docker compose down -v && docker compose up -d        # recreate the DB so db/init/ runs again

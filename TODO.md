@@ -62,7 +62,15 @@ Without these, scenarios SCN-02, SCN-03, SCN-09 and SCN-10 can't be decided corr
 - [x] Keep the document values in sync with `PRODUCTS` (`tests/test_docs.py`)
 
 ## 3. RAG pipeline
-- [ ] *(decision)* Embedding model and chunk size
+- [ ] Embedding model and chunk size
+  - [x] Library: `sentence-transformers` (local, no API key)
+  - [ ] *(decision)* Which model (sets the `vector(N)` dimension)
+  - [ ] *(decision)* Chunking strategy and top-k, chosen by a hand-made experiment (recall@k / MRR on labelled questions)
+    - [x] Experiment notebook (`notebooks/chunk_size_experiment.ipynb`): split by Markdown headers, then 700/100 characters, embed with `all-MiniLM-L6-v2`
+    - [x] Every chunk fits the model's 256-token limit (no truncation)
+    - [ ] 10–15 labelled questions (product + expected section)
+    - [ ] Recall@k (k = 1, 3, 5) with a `product_code` filter
+    - [ ] Compare 700/100 vs 800/150, and with vs without headers prepended
 - [ ] Ingestion script: load docs → chunk by section → embed → store
 - [ ] `document_chunks` table in pgvector with metadata (`doc_type`, `product_code`, `section`)
   - [ ] Grant the agent role `SELECT` on it (and add it to `TABLES` in `test_db_permissions.py`)
@@ -81,7 +89,9 @@ Without these, scenarios SCN-02, SCN-03, SCN-09 and SCN-10 can't be decided corr
 - [ ] Tests for each tool against the planted `SCN` rows
 
 ## 5. LangGraph agent
-- [ ] *(decision)* LLM provider and model
+- [ ] LLM provider and model
+  - [x] Provider: Groq
+  - [ ] *(decision)* Which model (must support tool calling and structured output)
 - [ ] State schema: incoming claim, policy, coverages, history, retrieved docs, decision, payout, reason, rationale
 - [ ] Nodes:
   - [ ] **Intake**: validate the input; missing date or amount → `request_info` (SCN-11)

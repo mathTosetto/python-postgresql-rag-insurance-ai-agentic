@@ -6,10 +6,16 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "faker>=40.54.0",
+    "langchain-text-splitters>=1.1.3",
+    "sentence-transformers>=6.3.0",
     "uv>=0.13.8",
 ]
 
 [dependency-groups]
+notebook = [
+    "ipykernel>=7.4.0",
+    "matplotlib>=3.11.2",
+]
 test = [
     "psycopg[binary]>=3.3.9",
     "pytest>=9.2.0",
@@ -17,7 +23,7 @@ test = [
 ]
 
 [tool.uv]
-default-groups = ["test"]
+default-groups = ["test", "notebook"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
